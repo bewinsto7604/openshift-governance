@@ -1,6 +1,9 @@
 # OpenShift Governance Tool
 
-Live cluster auditor for OpenShift and Kubernetes. Connects to your cluster, inventories all resources, and runs 50+ governance checks across security, resources, network, storage, compute, and compliance -- then generates an actionable report with severity ratings and remediation guidance.
+Live cluster auditor and discovery tool for OpenShift and Kubernetes. Two modes:
+
+- **Discovery** -- catalog every resource in the cluster and produce a full inventory report (nodes, deployments, pods, services, routes, storage, RBAC, SCCs)
+- **Audit** -- run 50+ governance checks across security, resources, network, storage, compute, and compliance with severity ratings and remediation guidance
 
 ## Quick Start
 
@@ -19,6 +22,29 @@ python governance.py --output report.html
 ```
 
 ## Usage
+
+### Discovery Mode
+
+```bash
+# Full cluster inventory as HTML
+python governance.py --discover
+
+# Discovery for a single namespace
+python governance.py --discover -n my-app-namespace
+
+# Discovery as Markdown
+python governance.py --discover --output inventory.md
+
+# Discovery as JSON (for pipelines, CMDB import, migration tooling)
+python governance.py --discover --json-output cluster_inventory.json
+
+# HTML + JSON together
+python governance.py --discover --output inventory.html --json-output inventory.json
+```
+
+Discovery reports include: nodes (capacity, versions, taints, conditions), namespaces (labels, status), deployments (replicas, strategy), pods (phase, containers, images, restarts), services (type, ports, selectors), routes (host, TLS, target), PVs/PVCs (status, class, capacity), storage classes, network policies, RBAC bindings, and SCCs.
+
+### Audit Mode
 
 ```bash
 # Run all audits (default)
@@ -138,7 +164,8 @@ openshift-governance/
 ├── governance.py          # CLI entry point
 ├── cluster.py             # Cluster connection and OpenShift detection
 ├── discovery.py           # Full resource inventory collection
-├── report.py              # HTML, Markdown, and JSON report generation
+├── report.py              # Audit report generation (HTML, Markdown, JSON)
+├── discovery_report.py    # Discovery report generation (HTML, Markdown, JSON)
 ├── config.yaml            # Configurable thresholds and policies
 ├── requirements.txt
 └── audits/

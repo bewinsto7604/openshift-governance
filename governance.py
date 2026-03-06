@@ -26,6 +26,7 @@ from audits.storage import StorageAudit
 from audits.compute import ComputeAudit
 from audits.compliance import ComplianceAudit
 from report import ReportGenerator
+from discovery_report import DiscoveryReportGenerator
 
 
 AUDIT_CLASSES = {
@@ -44,8 +45,9 @@ AUDIT_CLASSES = {
 @click.option("--output", "-o", default=None, help="Output report file (.html or .md)")
 @click.option("--namespace", "-n", default=None, help="Audit a specific namespace only")
 @click.option("--json-output", "-j", default=None, help="Export findings as JSON")
+@click.option("--discover", "-d", is_flag=True, help="Discovery only -- inventory the cluster without running audits")
 @click.option("--verbose", "-v", is_flag=True, help="Verbose output")
-def main(config, audit, output, namespace, json_output, verbose):
+def main(config, audit, output, namespace, json_output, discover, verbose):
     """OpenShift Governance & Compliance Auditor"""
 
     # Load config
@@ -57,8 +59,9 @@ def main(config, audit, output, namespace, json_output, verbose):
     with open(config_path) as f:
         cfg = yaml.safe_load(f)
 
+    mode = "DISCOVERY" if discover else "GOVERNANCE AUDIT"
     click.echo("=" * 70)
-    click.echo("  OPENSHIFT GOVERNANCE AUDIT")
+    click.echo(f"  OPENSHIFT {mode}")
     click.echo(f"  Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     click.echo("=" * 70)
 
@@ -87,6 +90,22 @@ def main(config, audit, output, namespace, json_output, verbose):
     click.echo(f"  Routes:        {inventory['counts']['routes']}")
     click.echo(f"  PVCs:          {inventory['counts']['pvcs']}")
     click.echo(f"  Nodes:         {inventory['counts']['nodes']}")
+
+    # Discovery-only mode
+    if discover:
+        disco_output = output or "discovery_report.html"
+        click.echo(f"\nGenerating discovery report...")
+        disco = DiscoveryReportGenerator(cluster_info, inventory)
+        disco.generate(disco_output)
+        click.echo(f"  Report saved: {disco_output}")
+
+        if json_output:
+            disco.export_json(json_output)
+            click.echo(f"  JSON export:  {json_output}")
+
+        click.echo(f"\n  Discovery complete -- {sum(inventory['counts'].values())} resources cataloged.")
+        click.echo("")
+        return
 
     # Determine which audits to run
     if audit:
