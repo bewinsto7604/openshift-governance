@@ -1,0 +1,94 @@
+# OpenShift Governance Tool Configuration
+# Customize thresholds and policies per environment
+
+cluster:
+  # Set to null to use current kubeconfig context
+  context: null
+
+# Audit categories to run (set false to skip)
+audits:
+  security: true
+  resources: true
+  network: true
+  storage: true
+  compute: true
+  compliance: true
+
+# Security audit thresholds
+security:
+  # Flag pods running as root
+  flag_root_pods: true
+  # Flag pods with privileged containers
+  flag_privileged: true
+  # Flag default service accounts with mounted tokens
+  flag_default_sa_tokens: true
+  # Flag secrets older than N days without rotation
+  secret_max_age_days: 90
+  # Required labels on namespaces
+  required_namespace_labels:
+    - owner
+    - environment
+  # Namespaces to exclude from audit
+  excluded_namespaces:
+    - openshift-*
+    - kube-*
+    - default
+
+# Resource audit thresholds
+resources:
+  # Flag pods without resource requests
+  require_requests: true
+  # Flag pods without resource limits
+  require_limits: true
+  # CPU request-to-limit ratio warning threshold
+  cpu_ratio_warn: 5.0
+  # Memory request-to-limit ratio warning threshold
+  memory_ratio_warn: 3.0
+  # Flag ResourceQuota usage above this percent
+  quota_usage_warn_percent: 80
+  # Flag idle deployments (0 replicas) older than N days
+  idle_deployment_days: 7
+
+# Network audit thresholds
+network:
+  # Flag namespaces without NetworkPolicy
+  require_network_policy: true
+  # Flag routes without TLS
+  require_tls_routes: true
+  # Flag services of type LoadBalancer
+  flag_loadbalancer_services: true
+
+# Storage audit thresholds
+storage:
+  # Flag unbound PVCs
+  flag_unbound_pvcs: true
+  # Flag PVs with ReclaimPolicy: Delete in production
+  flag_delete_reclaim: true
+  # Minimum storage class for production workloads
+  required_storage_class: null
+
+# Compute audit thresholds
+compute:
+  # Node CPU utilization warning threshold (percent)
+  node_cpu_warn_percent: 80
+  # Node memory utilization warning threshold (percent)
+  node_memory_warn_percent: 85
+  # Flag unschedulable nodes
+  flag_unschedulable: true
+  # Flag nodes with disk pressure / memory pressure
+  flag_node_conditions: true
+
+# Compliance / best practices
+compliance:
+  # Require liveness probes
+  require_liveness_probes: true
+  # Require readiness probes
+  require_readiness_probes: true
+  # Flag images using :latest tag
+  flag_latest_tag: true
+  # Require image pull policy Always
+  require_always_pull: true
+  # Max restart count before flagging
+  max_restart_count: 5
+  # Flag pods without pod disruption budgets
+  require_pdb: true
